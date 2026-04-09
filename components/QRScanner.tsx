@@ -49,7 +49,10 @@ export function QRScanner({ onSave }: Props) {
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        await videoRef.current.play();
+        await new Promise<void>((resolve) => {
+          const v = videoRef.current!;
+          v.onloadedmetadata = () => { v.play().then(resolve).catch(resolve); };
+        });
       }
       setScanning(true);
 
