@@ -8,16 +8,6 @@ import {
   setCachedLatestDrwNo,
 } from "./storage";
 
-const BASE = "https://www.dhlottery.co.kr";
-const DHLOTTERY_HEADERS = {
-  "User-Agent":
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-  Referer: `${BASE}/lt645/result`,
-  requestmenuuri: "/lt645/result",
-  "X-Requested-With": "XMLHttpRequest",
-  ajax: "true",
-  Accept: "application/json, text/javascript, */*; q=0.01",
-};
 
 interface NewDrawItem {
   ltEpsd: number;
@@ -54,10 +44,7 @@ function convertDraw(item: NewDrawItem): DrawResult {
 /** 특정 회차를 중심으로 10회차를 가져옵니다 */
 async function fetchDrawBatch(centerDrwNo: number): Promise<DrawResult[]> {
   try {
-    const res = await fetch(
-      `${BASE}/lt645/selectPstLt645InfoNew.do?srchDir=center&srchLtEpsd=${centerDrwNo}&_=${Date.now()}`,
-      { headers: DHLOTTERY_HEADERS }
-    );
+    const res = await fetch(`/api/lotto?center=${centerDrwNo}`);
     if (!res.ok) return [];
     const json = await res.json();
     const list: NewDrawItem[] = json?.data?.list ?? [];
@@ -70,13 +57,7 @@ async function fetchDrawBatch(centerDrwNo: number): Promise<DrawResult[]> {
 /** 최신 회차 번호를 가져옵니다 */
 async function fetchLatestDrwNo(): Promise<number | null> {
   try {
-    const res = await fetch(`${BASE}/selectMainInfo.do?_=${Date.now()}`, {
-      headers: {
-        ...DHLOTTERY_HEADERS,
-        Referer: `${BASE}/`,
-        requestmenuuri: "/",
-      },
-    });
+    const res = await fetch(`/api/lotto/latest`);
     if (!res.ok) return null;
     const json = await res.json();
     const lt645: NewDrawItem[] = json?.data?.result?.pstLtEpstInfo?.lt645 ?? [];
