@@ -48,11 +48,14 @@ export function QRScanner({ onSave }: Props) {
       });
       streamRef.current = stream;
       if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+        const v = videoRef.current;
+        v.srcObject = stream;
         await new Promise<void>((resolve) => {
-          const v = videoRef.current!;
-          v.onloadedmetadata = () => { v.play().then(resolve).catch(resolve); };
+          v.oncanplay = () => resolve();
+          // 이미 준비된 경우
+          if (v.readyState >= v.HAVE_ENOUGH_DATA) resolve();
         });
+        await v.play().catch(() => {});
       }
       setScanning(true);
 
@@ -148,7 +151,7 @@ export function QRScanner({ onSave }: Props) {
 
       {scanning && (
         <div className="relative rounded-xl overflow-hidden bg-black aspect-video">
-          <video ref={videoRef} className="w-full h-full object-cover" playsInline muted />
+          <video ref={videoRef} className="w-full h-full object-cover" playsInline muted autoPlay />
           <div className="absolute inset-0 border-4 border-dashed border-yellow-400 m-8 rounded-xl opacity-60 pointer-events-none" />
           <p className="absolute bottom-2 w-full text-center text-white text-xs">QR코드를 프레임 안에 맞춰주세요</p>
         </div>
