@@ -80,8 +80,9 @@ export function parseQRContent(
     }
     if (!vParam) return null;
 
-    // Format: {drwNo}q{game1}q{game2}... each game = 6 numbers × 2 digits = 12 chars
-    const parts = vParam.split("q");
+    // Format: {drwNo}[q|m|...]{game1}{sep}{game2}... each game = 12 digits (6×2)
+    // Separators can be 'q' (자동) or 'm' (수동); trailing non-game data may follow last game
+    const parts = vParam.split(/[a-z]/);
     if (parts.length < 2) return null;
 
     const drwNo = parseInt(parts[0], 10);
@@ -89,8 +90,10 @@ export function parseQRContent(
 
     const numberSets: number[][] = [];
     for (let i = 1; i < parts.length; i++) {
-      const gameStr = parts[i];
-      if (gameStr.length !== 12) continue;
+      const segment = parts[i];
+      if (segment.length < 12) continue;
+      // Take only first 12 chars (trailing data may be appended after last game)
+      const gameStr = segment.substring(0, 12);
       const game: number[] = [];
       for (let j = 0; j < 12; j += 2) {
         const n = parseInt(gameStr.substring(j, j + 2), 10);
