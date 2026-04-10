@@ -80,19 +80,20 @@ export function parseQRContent(
     }
     if (!vParam) return null;
 
-    const qIdx = vParam.indexOf("q");
-    if (qIdx === -1) return null;
+    // Format: {drwNo}q{game1}q{game2}... each game = 6 numbers × 2 digits = 12 chars
+    const parts = vParam.split("q");
+    if (parts.length < 2) return null;
 
-    const drwNo = parseInt(vParam.substring(0, qIdx), 10);
+    const drwNo = parseInt(parts[0], 10);
     if (isNaN(drwNo)) return null;
 
-    const numbersStr = vParam.substring(qIdx + 1);
-    // Each game = 6 numbers × 2 digits = 12 chars
     const numberSets: number[][] = [];
-    for (let i = 0; i + 12 <= numbersStr.length; i += 12) {
+    for (let i = 1; i < parts.length; i++) {
+      const gameStr = parts[i];
+      if (gameStr.length !== 12) continue;
       const game: number[] = [];
       for (let j = 0; j < 12; j += 2) {
-        const n = parseInt(numbersStr.substring(i + j, i + j + 2), 10);
+        const n = parseInt(gameStr.substring(j, j + 2), 10);
         if (isNaN(n) || n < 1 || n > 45) break;
         game.push(n);
       }
