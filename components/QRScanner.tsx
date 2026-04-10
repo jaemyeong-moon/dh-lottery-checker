@@ -149,13 +149,11 @@ export function QRScanner({ onSave }: Props) {
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
       </div>
 
-      {scanning && (
-        <div className="relative rounded-xl overflow-hidden bg-black aspect-video">
-          <video ref={videoRef} className="w-full h-full object-cover" playsInline muted autoPlay />
-          <div className="absolute inset-0 border-4 border-dashed border-yellow-400 m-8 rounded-xl opacity-60 pointer-events-none" />
-          <p className="absolute bottom-2 w-full text-center text-white text-xs">QR코드를 프레임 안에 맞춰주세요</p>
-        </div>
-      )}
+      <div className={`relative rounded-xl overflow-hidden bg-black aspect-video ${scanning ? "" : "hidden"}`}>
+        <video ref={videoRef} className="w-full h-full object-cover" playsInline muted autoPlay />
+        <div className="absolute inset-0 border-4 border-dashed border-yellow-400 m-8 rounded-xl opacity-60 pointer-events-none" />
+        <p className="absolute bottom-2 w-full text-center text-white text-xs">QR코드를 프레임 안에 맞춰주세요</p>
+      </div>
       <canvas ref={canvasRef} className="hidden" />
 
       {/* Manual URL input */}
