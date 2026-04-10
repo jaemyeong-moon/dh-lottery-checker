@@ -5,6 +5,7 @@ interface Props {
   size?: "sm" | "md" | "lg";
   highlight?: boolean;
   bonus?: boolean;
+  dimmed?: boolean;
 }
 
 function ballColor(n: number): string {
@@ -21,9 +22,9 @@ const sizes = {
   lg: "w-11 h-11 text-base",
 };
 
-export function NumberBall({ number, size = "md", highlight, bonus }: Props) {
+export function NumberBall({ number, size = "md", highlight, bonus, dimmed }: Props) {
   const sizeClass = sizes[size];
-  const colorClass = ballColor(number);
+  const colorClass = dimmed ? "bg-gray-200 text-gray-400" : ballColor(number);
   const ring = highlight ? "ring-2 ring-offset-1 ring-white" : "";
   const opacity = bonus ? "opacity-70" : "";
 

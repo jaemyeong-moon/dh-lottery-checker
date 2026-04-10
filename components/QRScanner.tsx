@@ -1,15 +1,16 @@
 "use client";
 import { useRef, useState, useCallback } from "react";
 import jsQR from "jsqr";
-import { parseQRContent } from "@/lib/lotto";
+import { parseQRContent, calcPrize, getDrawNumbers, PRIZE_LABELS } from "@/lib/lotto";
 import { NumberBall } from "./NumberBall";
-import type { NumberSet } from "@/lib/types";
+import type { NumberSet, DrawResult } from "@/lib/types";
 
 interface Props {
   onSave: (sets: NumberSet[]) => void;
+  draws: DrawResult[];
 }
 
-export function QRScanner({ onSave }: Props) {
+export function QRScanner({ onSave, draws }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -172,25 +173,57 @@ export function QRScanner({ onSave }: Props) {
 
       {error && <p className="text-red-500 text-sm">{error}</p>}
 
-      {parsed && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-3">
-          <p className="font-semibold text-green-800">{parsed.drwNo}회 로또 ({parsed.numberSets.length}게임)</p>
-          <div className="space-y-2">
-            {parsed.numberSets.map((nums, i) => (
-              <div key={i} className="flex items-center gap-1">
-                <span className="text-xs text-gray-500 w-4">{String.fromCharCode(65 + i)}</span>
-                {nums.map((n) => <NumberBall key={n} number={n} size="sm" />)}
+      {parsed && (() => {
+        const draw = draws.find((d) => d.drwNo === parsed.drwNo);
+        const winSet = draw ? new Set(getDrawNumbers(draw)) : null;
+        return (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="font-semibold text-green-800">{parsed.drwNo}회 로또 ({parsed.numberSets.length}게임)</p>
+              {!draw && <span className="text-xs text-gray-400">추첨 데이터 로딩 중…</span>}
+            </div>
+
+            {draw && (
+              <div className="flex items-center gap-1 flex-wrap">
+                <span className="text-xs text-gray-500 mr-1">당첨번호</span>
+                {getDrawNumbers(draw).map((n) => <NumberBall key={n} number={n} size="sm" />)}
+                <span className="mx-1 text-gray-300">+</span>
+                <NumberBall number={draw.bnusNo} size="sm" bonus />
               </div>
-            ))}
+            )}
+
+            <div className="space-y-2">
+              {parsed.numberSets.map((nums, i) => {
+                const prize = draw ? calcPrize(nums, draw) : null;
+                const rankLabel = prize ? PRIZE_LABELS[prize.rank] : draw ? "낙첨" : null;
+                const rankColor = prize
+                  ? prize.rank <= 2 ? "bg-red-100 text-red-700" : prize.rank === 3 ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"
+                  : "bg-gray-100 text-gray-500";
+                return (
+                  <div key={i} className="flex items-center gap-1 flex-wrap">
+                    <span className="text-xs text-gray-500 w-4">{String.fromCharCode(65 + i)}</span>
+                    {nums.map((n) => (
+                      <NumberBall key={n} number={n} size="sm" dimmed={winSet ? !winSet.has(n) : false} />
+                    ))}
+                    {rankLabel && (
+                      <span className={`ml-1 px-2 py-0.5 rounded-full text-xs font-semibold ${rankColor}`}>
+                        {rankLabel}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={handleSaveParsed}
+              className="w-full py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold text-sm"
+            >
+              저장하고 당첨이력 조회
+            </button>
           </div>
-          <button
-            onClick={handleSaveParsed}
-            className="w-full py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold text-sm"
-          >
-            저장하고 당첨이력 조회
-          </button>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

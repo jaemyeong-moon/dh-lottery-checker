@@ -92,7 +92,7 @@ export default function Home() {
         )}
 
         {tab === "qr" && (
-          <QRScanner onSave={handleSaveMany} />
+          <QRScanner onSave={handleSaveMany} draws={draws} />
         )}
 
         {tab === "my" && (
